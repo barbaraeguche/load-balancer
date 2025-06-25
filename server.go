@@ -1,7 +1,6 @@
 /*
-*
-this is for individual backend server representation and management.
-*/
+* this is for individual backend server representation and management.
+ */
 package main
 
 import (

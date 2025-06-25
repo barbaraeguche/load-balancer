@@ -1,7 +1,6 @@
 /*
-*
-this manages a collection of backend servers and routing logic.
-*/
+* this manages a collection of backend servers and routing logic.
+ */
 package main
 
 import (
