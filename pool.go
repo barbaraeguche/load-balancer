@@ -74,9 +74,9 @@ func (sp *ServerPool) getAliveServerCount() int {
 
 // mark specific server as unhealthy
 func (sp *ServerPool) markServerDown(targetUrl *url.URL) {
-	sp.mutex.Lock()
+	sp.mutex.RLock()
 	_, server := sp.findServer(targetUrl)
-	sp.mutex.Unlock()
+	sp.mutex.RUnlock()
 
 	if server != nil {
 		server.mutex.Lock()
@@ -87,9 +87,9 @@ func (sp *ServerPool) markServerDown(targetUrl *url.URL) {
 
 // mark specific server as healthy
 func (sp *ServerPool) markServerUp(targetUrl *url.URL) {
-	sp.mutex.Lock()
+	sp.mutex.RLock()
 	_, server := sp.findServer(targetUrl)
-	sp.mutex.Unlock()
+	sp.mutex.RUnlock()
 
 	if server != nil {
 		server.mutex.Lock()

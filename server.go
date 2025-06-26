@@ -6,7 +6,6 @@ package main
 import (
 	"net/url"
 	"sync"
-	"time"
 )
 
 type Server struct {
@@ -15,7 +14,6 @@ type Server struct {
 	weight          int // for weighted load balancing
 	activeConnCount int
 	maxAllowedConns int
-	lastHealthCheck time.Time
 	mutex           sync.RWMutex // for thread safety
 }
 
