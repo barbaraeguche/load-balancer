@@ -35,13 +35,38 @@ func (sp *ServerPool) removeServer(targetUrl *url.URL) {
 	if server != nil {
 		sp.servers = append(sp.servers[:idx], sp.servers[idx+1:]...)
 		sp.totalWeight -= server.weight
+
+		// reset current index if >= new length
+		length := len(sp.servers)
+		if sp.currentIdx >= length && length > 0 {
+			sp.currentIdx = 0
+		}
 	}
 }
 
 // main routing logic (round-robin or weighted)
-//func (sp *ServerPool) getNextServer() *Server { //todo
-//
-//}
+func (sp *ServerPool) getNextServer() *Server {
+	sp.mutex.Lock()
+	defer sp.mutex.Unlock()
+
+	length := len(sp.servers)
+	if length == 0 {
+		return nil
+	}
+
+	start := sp.currentIdx
+	for i := 0; i < length; i++ {
+		idx := (start + i) % length
+
+		if sp.servers[idx].isAlive() {
+			sp.currentIdx = (idx + 1) % length // update for next call
+			return sp.servers[idx]
+		}
+	}
+
+	// all servers are down
+	return nil
+}
 
 // return only alive servers
 func (sp *ServerPool) getHealthyServers() []*Server {
@@ -73,29 +98,37 @@ func (sp *ServerPool) getAliveServerCount() int {
 }
 
 // mark specific server as unhealthy
-func (sp *ServerPool) markServerDown(targetUrl *url.URL) {
+func (sp *ServerPool) markServerDown(targetUrl *url.URL) bool {
 	sp.mutex.RLock()
+	defer sp.mutex.RUnlock()
+
 	_, server := sp.findServer(targetUrl)
-	sp.mutex.RUnlock()
 
 	if server != nil {
 		server.mutex.Lock()
 		server.setAlive(false)
 		server.mutex.Unlock()
+		return true
 	}
+
+	return false
 }
 
 // mark specific server as healthy
-func (sp *ServerPool) markServerUp(targetUrl *url.URL) {
+func (sp *ServerPool) markServerUp(targetUrl *url.URL) bool {
 	sp.mutex.RLock()
+	defer sp.mutex.RUnlock()
+
 	_, server := sp.findServer(targetUrl)
-	sp.mutex.RUnlock()
 
 	if server != nil {
 		server.mutex.Lock()
 		server.setAlive(true)
 		server.mutex.Unlock()
+		return true
 	}
+
+	return false
 }
 
 // assuming the sp.mutex is already locked
