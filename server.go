@@ -48,10 +48,12 @@ func (s *Server) canAcceptConnection() bool {
 
 // track active connections
 func (s *Server) incrementConnections() bool {
+	canAcceptConns := s.canAcceptConnection()
+
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if s.alive && s.activeConnCount < s.maxAllowedConns {
+	if canAcceptConns {
 		s.activeConnCount++
 		return true
 	}
